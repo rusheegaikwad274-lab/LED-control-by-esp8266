@@ -1,9 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ESP8266 Smart LED Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: white;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .card {
+      background: white;
+      color: black;
+      border-radius: 15px;
+      padding: 25px;
+      max-width: 350px;
+      margin: auto;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .on { background: #4CAF50; color: white; }
+    .off { background: #f44336; color: white; }
+    .blink { background: #ff9800; color: white; }
+
+    input[type=range] {
+      width: 100%;
+      margin-top: 15px;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h2>ESP8266 Smart LED</h2>
+    <p>Control LED via Internet</p>
+
+    <button class="on" onclick="setOn()">ON</button>
+    <button class="off" onclick="setOff()">OFF</button>
+    <button class="blink" onclick="setBlink()">BLINK</button>
+
+    <p>Brightness</p>
+    <input type="range" min="0" max="255" value="128" oninput="setBrightness(this.value)">
+
+    <div class="status" id="status">Status: Ready</div>
+  </div>
+
 <script>
-  // 🔥 Firebase config (replace with your real values)
+  // 🔥 Firebase config (your real data)
   const firebaseConfig = {
     apiKey: "AIzaSyAvI5a90RryY1GHkJkWQvEk-5RE2uTgtTE",
     authDomain: "led-control-by-esp8266.firebaseapp.com",
-    databaseURL: "https://led-control-by-esp8266-default-rtdb.asia-       southeast1.firebasedatabase.app",
+    databaseURL: "https://led-control-by-esp8266-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "led-control-by-esp8266"
   };
 
@@ -44,3 +118,5 @@
     document.getElementById("status").innerText = "Brightness: " + val;
   }
 </script>
+</body>
+</html>
