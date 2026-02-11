@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ESP8266 LED Control</title>
+
+  <!-- Firebase SDK (script version for GitHub Pages) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+
+<body style="text-align:center; font-family:Arial;">
+
+  <h1>ESP8266 LED Control</h1>
+
+  <button onclick="ledOn()">ON</button>
+  <button onclick="ledOff()">OFF</button>
+
+  <h2 id="status">Status: Unknown</h2>
+
+<script>
+  // 🔴 YOUR FIREBASE CONFIG
+  var firebaseConfig = {
+    apiKey: "AIzaSyAvI5a90RryY1GHkJkWQvEk-5RE2uTgtTE",
+    authDomain: "led-control-by-esp8266.firebaseapp.com",
+    databaseURL: "https://led-control-by-esp8266-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "led-control-by-esp8266",
+    storageBucket: "led-control-by-esp8266.firebasestorage.app",
+    messagingSenderId: "115025384622",
+    appId: "1:115025384622:web:164c1cd197d3eadbef093f"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+
+  var database = firebase.database();
+
+  function ledOn() {
+    database.ref("led").set(1);
+  }
+
+  function ledOff() {
+    database.ref("led").set(0);
+  }
+
+  // Read data live
+  database.ref("led").on("value", function(snapshot) {
+    if (snapshot.val() == 1)
+      document.getElementById("status").innerHTML = "Status: ON";
+    else
+      document.getElementById("status").innerHTML = "Status: OFF";
+  });
+</script>
+
+</body>
+</html>
