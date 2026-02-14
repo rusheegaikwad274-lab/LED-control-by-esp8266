@@ -1,122 +1,96 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ESP8266 Smart LED Control</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ESP8266 LED Control</title>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #1e3c72, #2a5298);
-      color: white;
+      font-family: Arial;
       text-align: center;
-      padding: 30px;
-    }
-
-    .card {
-      background: white;
-      color: black;
-      border-radius: 15px;
-      padding: 25px;
-      max-width: 350px;
-      margin: auto;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    }
-
-    h2 {
-      margin-bottom: 10px;
+      margin-top: 50px;
+      background: #f2f2f2;
     }
 
     button {
-      width: 100%;
-      padding: 15px;
-      margin: 10px 0;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
+      padding: 15px 25px;
+      margin: 10px;
+      font-size: 18px;
       cursor: pointer;
     }
 
-    .on { background: #4CAF50; color: white; }
-    .off { background: #f44336; color: white; }
-    .blink { background: #ff9800; color: white; }
-
     input[type=range] {
-      width: 100%;
-      margin-top: 15px;
-    }
-
-    .status {
-      margin-top: 15px;
-      font-weight: bold;
+      width: 250px;
     }
   </style>
 </head>
 
 <body>
-  <div class="card">
-    <h2>ESP8266 Smart LED</h2>
-    <p>Control LED via Internet</p>
 
-    <button class="on" onclick="setOn()">ON</button>
-    <button class="off" onclick="setOff()">OFF</button>
-    <button class="blink" onclick="setBlink()">BLINK</button>
+  <h1>ESP8266 LED Control</h1>
 
-    <p>Brightness</p>
-    <input type="range" min="0" max="255" value="128" oninput="setBrightness(this.value)">
+  <button onclick="ledOn()">ON</button>
+  <button onclick="ledOff()">OFF</button>
+  <button onclick="ledBlink()">BLINK</button>
 
-    <div class="status" id="status">Status: Ready</div>
-  </div>
+  <br><br>
 
-<script>
-  // 🔥 Firebase config (your real data)
-  const firebaseConfig = {
-    apiKey: "AIzaSyAvI5a90RryY1GHkJkWQvEk-5RE2uTgtTE",
-    authDomain: "led-control-by-esp8266.firebaseapp.com",
-    databaseURL: "https://led-control-by-esp8266-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "led-control-by-esp8266"
-  };
+  <input type="range" min="0" max="255" value="0" oninput="setBrightness(this.value)">
+  <p id="brightVal">Brightness: 0</p>
 
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+  <p id="status">Status: --</p>
 
-  // Functions for buttons
-  function setOn() {
-    db.ref("led").set({
-      power: 1,
-      mode: "normal",
-      brightness: 255
-    });
-    document.getElementById("status").innerText = "Status: LED ON";
-  }
+  <script>
+    // 🔥 Firebase configuration
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "led-control-by-esp8266.firebaseapp.com",
+      databaseURL: "https://led-control-by-esp8266-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "led-control-by-esp8266"
+    };
 
-  function setOff() {
-    db.ref("led").set({
-      power: 0,
-      mode: "normal",
-      brightness: 0
-    });
-    document.getElementById("status").innerText = "Status: LED OFF";
-  }
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-  function setBlink() {
-    db.ref("led").set({
-      power: 1,
-      mode: "blink",
-      brightness: 255
-    });
-    document.getElementById("status").innerText = "Status: LED BLINK";
-  }
+    function ledOn() {
+      db.ref("led").update({
+        power: 1,
+        mode: "normal",
+        brightness: 255
+      });
+      document.getElementById("status").innerText = "Status: LED ON";
+    }
 
-  function setBrightness(val) {
-    db.ref("led/brightness").set(Number(val));
-    document.getElementById("status").innerText = "Brightness: " + val;
-  }
-</script>
+    function ledOff() {
+      db.ref("led").update({
+        power: 0,
+        mode: "normal",
+        brightness: 0
+      });
+      document.getElementById("status").innerText = "Status: LED OFF";
+    }
+
+    function ledBlink() {
+      db.ref("led").update({
+        power: 1,
+        mode: "blink"
+      });
+      document.getElementById("status").innerText = "Status: LED BLINK";
+    }
+
+    function setBrightness(val) {
+      db.ref("led").update({
+        brightness: Number(val),
+        power: 1,
+        mode: "normal"
+      });
+      document.getElementById("brightVal").innerText = "Brightness: " + val;
+    }
+  </script>
+
 </body>
 </html>
