@@ -1,18 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>ESP8266 Smart LED</title>
+<title>Smart Bulb Control</title>
 
 <!-- Firebase v8 -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
   body {
     margin: 0;
     font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #1d2671, #c33764);
+    background: radial-gradient(circle, #1e3c72, #2a5298);
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -24,77 +25,91 @@
     background: rgba(255,255,255,0.12);
     padding: 30px;
     border-radius: 20px;
-    width: 320px;
+    width: 340px;
     text-align: center;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
   }
 
-  h1 {
-    margin-bottom: 10px;
-  }
-
-  .status {
-    margin: 15px 0;
+  input, button {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 10px;
+    border: none;
     font-size: 16px;
-    opacity: 0.9;
   }
 
   button {
-    width: 100%;
-    padding: 14px;
-    margin: 8px 0;
-    font-size: 16px;
-    border: none;
-    border-radius: 12px;
     cursor: pointer;
-    color: white;
-    transition: transform 0.2s;
+    background: #00e676;
+    color: #000;
+    font-weight: bold;
   }
 
-  button:hover {
+  .hidden { display: none; }
+
+  .bulb {
+    width: 120px;
+    margin: 20px auto;
+    transition: filter 0.3s, transform 0.3s;
+  }
+
+  .on {
+    filter: drop-shadow(0 0 25px yellow);
     transform: scale(1.05);
   }
 
-  .on { background: #2ecc71; }
-  .off { background: #e74c3c; }
-  .blink { background: #f39c12; }
-
-  .slider-box {
-    margin-top: 20px;
+  .off {
+    opacity: 0.4;
   }
 
-  input[type=range] {
-    width: 100%;
-  }
-
-  .footer {
-    margin-top: 15px;
-    font-size: 13px;
-    opacity: 0.7;
-  }
+  .btn-red { background:#ff5252; color:white; }
+  .btn-orange { background:#ffb300; color:black; }
 </style>
 </head>
 
 <body>
 
 <div class="card">
-  <h1>Smart LED</h1>
-  <div class="status" id="status">Status: --</div>
 
-  <button class="on" onclick="ledOn()">ON</button>
-  <button class="off" onclick="ledOff()">OFF</button>
-  <button class="blink" onclick="ledBlink()">BLINK</button>
-
-  <div class="slider-box">
-    <p id="brightText">Brightness: 0</p>
-    <input type="range" min="0" max="255" value="0" oninput="setBrightness(this.value)">
+  <!-- LOGIN / REGISTER -->
+  <div id="authBox">
+    <h2>Smart Bulb Login</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <button onclick="register()">Register</button>
+    <p id="msg" style="color:#ffccbc;"></p>
   </div>
 
-  <div class="footer">ESP8266 + Firebase</div>
+  <!-- VERIFY -->
+  <div id="verifyBox" class="hidden">
+    <h3>Email not verified</h3>
+    <p>Please verify your email</p>
+    <button onclick="sendVerification()">Send Verification Mail</button>
+    <button onclick="logout()" class="btn-red">Logout</button>
+  </div>
+
+  <!-- CONTROL -->
+  <div id="controlBox" class="hidden">
+    <h2>Smart Bulb</h2>
+
+    <img src="https://i.imgur.com/ybmJZ8U.png" id="bulb" class="bulb off">
+
+    <button onclick="bulbOn()">ON</button>
+    <button onclick="bulbOff()" class="btn-red">OFF</button>
+    <button onclick="bulbBlink()" class="btn-orange">BLINK</button>
+
+    <p id="brightText">Brightness: 0</p>
+    <input type="range" min="0" max="255" oninput="setBrightness(this.value)">
+
+    <button onclick="logout()" class="btn-red">Logout</button>
+  </div>
+
 </div>
 
 <script>
-  // 🔥 Firebase config
+  /* 🔥 Firebase config */
   const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "led-control-by-esp8266.firebaseapp.com",
@@ -105,54 +120,64 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  function ledOn() {
-    db.ref("led").update({
-      power: 1,
-      mode: "normal",
-      brightness: 255
-    });
+  /* 🔐 AUTH */
+  function login() {
+    firebase.auth().signInWithEmailAndPassword(
+      email.value, password.value
+    ).catch(e => msg.innerText = e.message);
   }
 
-  function ledOff() {
-    db.ref("led").update({
-      power: 0,
-      mode: "normal",
-      brightness: 0
-    });
+  function register() {
+    firebase.auth().createUserWithEmailAndPassword(
+      email.value, password.value
+    ).then(() => sendVerification())
+     .catch(e => msg.innerText = e.message);
   }
 
-  function ledBlink() {
-    db.ref("led").update({
-      power: 1,
-      mode: "blink"
-    });
+  function sendVerification() {
+    firebase.auth().currentUser.sendEmailVerification()
+      .then(() => msg.innerText = "Verification email sent");
   }
 
-  function setBrightness(val) {
-    db.ref("led").update({
-      brightness: Number(val),
-      power: 1,
-      mode: "normal"
-    });
-    document.getElementById("brightText").innerText =
-      "Brightness: " + val;
+  function logout() {
+    firebase.auth().signOut();
   }
 
-  // 🔄 Live status from Firebase
-  db.ref("led").on("value", snapshot => {
-    const d = snapshot.val();
+  firebase.auth().onAuthStateChanged(user => {
+    authBox.classList.add("hidden");
+    verifyBox.classList.add("hidden");
+    controlBox.classList.add("hidden");
+
+    if (!user) authBox.classList.remove("hidden");
+    else if (!user.emailVerified) verifyBox.classList.remove("hidden");
+    else controlBox.classList.remove("hidden");
+  });
+
+  /* 💡 BULB CONTROL */
+  function bulbOn() {
+    db.ref("led").update({ power:1, mode:"normal", brightness:255 });
+  }
+
+  function bulbOff() {
+    db.ref("led").update({ power:0, mode:"normal", brightness:0 });
+  }
+
+  function bulbBlink() {
+    db.ref("led").update({ power:1, mode:"blink" });
+  }
+
+  function setBrightness(v) {
+    db.ref("led").update({ power:1, mode:"normal", brightness:Number(v) });
+    brightText.innerText = "Brightness: " + v;
+  }
+
+  /* 🔄 LIVE SYNC */
+  db.ref("led").on("value", snap => {
+    const d = snap.val();
     if (!d) return;
 
-    document.getElementById("brightText").innerText =
-      "Brightness: " + d.brightness;
-
-    if (d.power === 0) {
-      document.getElementById("status").innerText = "Status: OFF";
-    } else if (d.mode === "blink") {
-      document.getElementById("status").innerText = "Status: BLINKING";
-    } else {
-      document.getElementById("status").innerText = "Status: ON";
-    }
+    brightText.innerText = "Brightness: " + d.brightness;
+    bulb.className = "bulb " + (d.power ? "on" : "off");
   });
 </script>
 
