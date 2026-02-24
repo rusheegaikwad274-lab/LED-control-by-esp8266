@@ -1,184 +1,210 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Smart Bulb Control</title>
-
-<!-- Firebase v8 -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<title>Smart Bulb Wall Remote</title>
 
 <style>
   body {
     margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: radial-gradient(circle, #1e3c72, #2a5298);
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white;
-  }
-
-  .card {
-    background: rgba(255,255,255,0.12);
-    padding: 30px;
-    border-radius: 20px;
-    width: 340px;
+    font-family: Arial, sans-serif;
+    background: #eaeaea;
     text-align: center;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
   }
 
-  input, button {
-    width: 100%;
-    padding: 12px;
-    margin: 8px 0;
+  /* Wall */
+  .wall {
+    background: #ddd;
+    height: 60vh;
+    position: relative;
+    padding-top: 20px;
+  }
+
+  /* Holder on wall */
+  .holder {
+    margin: auto;
+  }
+
+  .socket {
+    width: 70px;
+    height: 35px;
+    background: #222;
+    border-radius: 0 0 12px 12px;
+    margin: auto;
+  }
+
+  /* Remote pouch */
+  .pouch {
+    position: absolute;
+    right: 30px;
+    top: 120px;
+    width: 90px;
+    height: 160px;
+    background: #444;
     border-radius: 10px;
-    border: none;
-    font-size: 16px;
+    padding-top: 10px;
+  }
+
+  .remote {
+    width: 60px;
+    height: 120px;
+    background: #222;
+    margin: auto;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .remote-btn {
+    width: 30px;
+    height: 30px;
+    background: red;
+    border-radius: 50%;
+    margin: 20px auto;
+  }
+
+  /* Controller panel */
+  .controller {
+    background: white;
+    width: 260px;
+    margin: 20px auto;
+    padding: 15px;
+    border-radius: 10px;
+    display: none;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  }
+
+  /* Table */
+  .table {
+    background: #b08968;
+    height: 40vh;
+    padding-top: 30px;
+  }
+
+  /* Bulb */
+  #bulb {
+    width: 120px;
+    margin: auto;
+    transition: 0.5s;
+  }
+
+  .glass {
+    fill: #555;
+  }
+
+  .filament {
+    stroke: #777;
+    stroke-width: 3;
+    fill: none;
+  }
+
+  .base {
+    fill: #333;
+  }
+
+  .plugged {
+    transform: translateY(-50px);
+  }
+
+  .on .glass {
+    fill: yellow;
+    filter: drop-shadow(0 0 25px yellow);
+  }
+
+  .on .filament {
+    stroke: orange;
   }
 
   button {
+    padding: 8px 16px;
+    margin: 6px;
+    font-size: 15px;
     cursor: pointer;
-    background: #00e676;
-    color: #000;
+  }
+
+  #status {
     font-weight: bold;
+    margin-top: 10px;
   }
-
-  .hidden { display: none; }
-
-  .bulb {
-    width: 120px;
-    margin: 20px auto;
-    transition: filter 0.3s, transform 0.3s;
-  }
-
-  .on {
-    filter: drop-shadow(0 0 25px yellow);
-    transform: scale(1.05);
-  }
-
-  .off {
-    opacity: 0.4;
-  }
-
-  .btn-red { background:#ff5252; color:white; }
-  .btn-orange { background:#ffb300; color:black; }
 </style>
 </head>
 
 <body>
 
-<div class="card">
+<!-- WALL -->
+<div class="wall">
+  <h2>Wall</h2>
 
-  <!-- LOGIN / REGISTER -->
-  <div id="authBox">
-    <h2>Smart Bulb Login</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <button onclick="register()">Register</button>
-    <p id="msg" style="color:#ffccbc;"></p>
+  <div class="holder">
+    <div class="socket"></div>
+    <p>Bulb Holder</p>
   </div>
 
-  <!-- VERIFY -->
-  <div id="verifyBox" class="hidden">
-    <h3>Email not verified</h3>
-    <p>Please verify your email</p>
-    <button onclick="sendVerification()">Send Verification Mail</button>
-    <button onclick="logout()" class="btn-red">Logout</button>
+  <!-- Remote in pouch -->
+  <div class="pouch">
+    <div class="remote" onclick="openController()">
+      <div class="remote-btn"></div>
+      <p style="color:white;font-size:12px;">Remote</p>
+    </div>
   </div>
+</div>
 
-  <!-- CONTROL -->
-  <div id="controlBox" class="hidden">
-    <h2>Smart Bulb</h2>
+<!-- CONTROLLER (HIDDEN INITIALLY) -->
+<div class="controller" id="controller">
+  <h3>LED Controller</h3>
+  <button onclick="plugBulb()">🔌 Plug Bulb</button><br>
+  <button onclick="turnOn()">ON</button>
+  <button onclick="turnOff()">OFF</button>
+  <p id="status">Status: Waiting</p>
+</div>
 
-    <img src="https://i.imgur.com/ybmJZ8U.png" id="bulb" class="bulb off">
+<!-- TABLE -->
+<div class="table">
+  <h2>Table</h2>
 
-    <button onclick="bulbOn()">ON</button>
-    <button onclick="bulbOff()" class="btn-red">OFF</button>
-    <button onclick="bulbBlink()" class="btn-orange">BLINK</button>
-
-    <p id="brightText">Brightness: 0</p>
-    <input type="range" min="0" max="255" oninput="setBrightness(this.value)">
-
-    <button onclick="logout()" class="btn-red">Logout</button>
-  </div>
-
+  <svg id="bulb" viewBox="0 0 120 200">
+    <ellipse cx="60" cy="70" rx="45" ry="55" class="glass"/>
+    <path d="M45 80 Q60 90 75 80" class="filament"/>
+    <rect x="45" y="125" width="30" height="25" class="base"/>
+    <rect x="42" y="150" width="36" height="20" class="base"/>
+  </svg>
 </div>
 
 <script>
-  /* 🔥 Firebase config */
-  const firebaseConfig = {
-    apiKey: "AIzaSyAvI5a90RryY1GHkJkWQvEk-5RE2uTgtTE",
-    authDomain: "led-control-by-esp8266.firebaseapp.com",
-    databaseURL: "https://led-control-by-esp8266-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "led-control-by-esp8266"
-  };
+  let controllerOpen = false;
+  let isPlugged = false;
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  /* 🔐 AUTH */
-  function login() {
-    firebase.auth().signInWithEmailAndPassword(
-      email.value, password.value
-    ).catch(e => msg.innerText = e.message);
+  function openController() {
+    controllerOpen = true;
+    document.getElementById("controller").style.display = "block";
   }
 
-  function register() {
-    firebase.auth().createUserWithEmailAndPassword(
-      email.value, password.value
-    ).then(() => sendVerification())
-     .catch(e => msg.innerText = e.message);
+  function plugBulb() {
+    if (!controllerOpen) return;
+    isPlugged = true;
+    document.getElementById("bulb").classList.add("plugged");
+    document.getElementById("status").innerText =
+      "Status: Bulb plugged";
   }
 
-  function sendVerification() {
-    firebase.auth().currentUser.sendEmailVerification()
-      .then(() => msg.innerText = "Verification email sent");
+  function turnOn() {
+    if (!isPlugged) {
+      alert("Plug the bulb first!");
+      return;
+    }
+    document.getElementById("bulb").classList.add("on");
+    document.getElementById("status").innerText =
+      "Status: Bulb ON";
   }
 
-  function logout() {
-    firebase.auth().signOut();
+  function turnOff() {
+    if (!isPlugged) {
+      alert("Plug the bulb first!");
+      return;
+    }
+    document.getElementById("bulb").classList.remove("on");
+    document.getElementById("status").innerText =
+      "Status: Bulb OFF";
   }
-
-  firebase.auth().onAuthStateChanged(user => {
-    authBox.classList.add("hidden");
-    verifyBox.classList.add("hidden");
-    controlBox.classList.add("hidden");
-
-    if (!user) authBox.classList.remove("hidden");
-    else if (!user.emailVerified) verifyBox.classList.remove("hidden");
-    else controlBox.classList.remove("hidden");
-  });
-
-  /* 💡 BULB CONTROL */
-  function bulbOn() {
-    db.ref("led").update({ power:1, mode:"normal", brightness:255 });
-  }
-
-  function bulbOff() {
-    db.ref("led").update({ power:0, mode:"normal", brightness:0 });
-  }
-
-  function bulbBlink() {
-    db.ref("led").update({ power:1, mode:"blink" });
-  }
-
-  function setBrightness(v) {
-    db.ref("led").update({ power:1, mode:"normal", brightness:Number(v) });
-    brightText.innerText = "Brightness: " + v;
-  }
-
-  /* 🔄 LIVE SYNC */
-  db.ref("led").on("value", snap => {
-    const d = snap.val();
-    if (!d) return;
-
-    brightText.innerText = "Brightness: " + d.brightness;
-    bulb.className = "bulb " + (d.power ? "on" : "off");
-  });
 </script>
 
 </body>
