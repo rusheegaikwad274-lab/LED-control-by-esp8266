@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Smart Bulb Wall Remote</title>
+<title>Smart Bulb Wall Control</title>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <style>
   body {
@@ -12,17 +16,12 @@
     text-align: center;
   }
 
-  /* Wall */
+  /* ---------- WALL ---------- */
   .wall {
     background: #ddd;
-    height: 60vh;
+    height: 55vh;
     position: relative;
     padding-top: 20px;
-  }
-
-  /* Holder on wall */
-  .holder {
-    margin: auto;
   }
 
   .socket {
@@ -33,10 +32,10 @@
     margin: auto;
   }
 
-  /* Remote pouch */
+  /* ---------- REMOTE ---------- */
   .pouch {
     position: absolute;
-    right: 30px;
+    right: 25px;
     top: 120px;
     width: 90px;
     height: 160px;
@@ -55,59 +54,51 @@
   }
 
   .remote-btn {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     background: red;
     border-radius: 50%;
     margin: 20px auto;
   }
 
-  /* Controller panel */
+  /* ---------- CONTROLLER ---------- */
   .controller {
     background: white;
     width: 260px;
-    margin: 20px auto;
+    margin: 15px auto;
     padding: 15px;
     border-radius: 10px;
     display: none;
     box-shadow: 0 0 10px rgba(0,0,0,0.3);
   }
 
-  /* Table */
+  /* ---------- TABLE ---------- */
   .table {
     background: #b08968;
-    height: 40vh;
-    padding-top: 30px;
+    height: 45vh;
+    padding-top: 20px;
   }
 
-  /* Bulb */
+  /* ---------- BULB ---------- */
   #bulb {
     width: 120px;
     margin: auto;
-    transition: 0.5s;
+    position: relative;     /* 🔥 REQUIRED FOR MOVEMENT */
+    top: 0;
+    transition: transform 0.6s;
   }
 
-  .glass {
-    fill: #555;
-  }
-
-  .filament {
-    stroke: #777;
-    stroke-width: 3;
-    fill: none;
-  }
-
-  .base {
-    fill: #333;
-  }
+  .glass { fill: #555; }
+  .filament { stroke: #777; stroke-width: 3; fill: none; }
+  .base { fill: #333; }
 
   .plugged {
-    transform: translateY(-50px);
+    transform: translateY(-140px);
   }
 
   .on .glass {
     fill: yellow;
-    filter: drop-shadow(0 0 25px yellow);
+    filter: drop-shadow(0 0 30px yellow);
   }
 
   .on .filament {
@@ -130,16 +121,17 @@
 
 <body>
 
+<h2>🔐 Smart Bulb Control</h2>
+
+<button onclick="googleLogin()">Sign in with Google</button>
+<p id="userStatus">Not signed in</p>
+
 <!-- WALL -->
 <div class="wall">
-  <h2>Wall</h2>
+  <h3>Wall</h3>
+  <div class="socket"></div>
 
-  <div class="holder">
-    <div class="socket"></div>
-    <p>Bulb Holder</p>
-  </div>
-
-  <!-- Remote in pouch -->
+  <!-- Remote -->
   <div class="pouch">
     <div class="remote" onclick="openController()">
       <div class="remote-btn"></div>
@@ -148,7 +140,7 @@
   </div>
 </div>
 
-<!-- CONTROLLER (HIDDEN INITIALLY) -->
+<!-- CONTROLLER -->
 <div class="controller" id="controller">
   <h3>LED Controller</h3>
   <button onclick="plugBulb()">🔌 Plug Bulb</button><br>
@@ -159,8 +151,7 @@
 
 <!-- TABLE -->
 <div class="table">
-  <h2>Table</h2>
-
+  <h3>Table</h3>
   <svg id="bulb" viewBox="0 0 120 200">
     <ellipse cx="60" cy="70" rx="45" ry="55" class="glass"/>
     <path d="M45 80 Q60 90 75 80" class="filament"/>
@@ -170,16 +161,39 @@
 </div>
 
 <script>
-  let controllerOpen = false;
+  /* ---------- FIREBASE ---------- */
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+
+  const auth = firebase.auth();
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  function googleLogin() {
+    auth.signInWithPopup(provider)
+      .then(res => {
+        document.getElementById("userStatus").innerText =
+          "Logged in: " + res.user.email;
+      })
+      .catch(err => alert(err.message));
+  }
+
+  /* ---------- LOGIC ---------- */
   let isPlugged = false;
 
   function openController() {
-    controllerOpen = true;
+    if (!auth.currentUser) {
+      alert("Please sign in with Google first!");
+      return;
+    }
     document.getElementById("controller").style.display = "block";
   }
 
   function plugBulb() {
-    if (!controllerOpen) return;
     isPlugged = true;
     document.getElementById("bulb").classList.add("plugged");
     document.getElementById("status").innerText =
@@ -192,8 +206,7 @@
       return;
     }
     document.getElementById("bulb").classList.add("on");
-    document.getElementById("status").innerText =
-      "Status: Bulb ON";
+    document.getElementById("status").innerText = "Status: Bulb ON";
   }
 
   function turnOff() {
@@ -202,8 +215,7 @@
       return;
     }
     document.getElementById("bulb").classList.remove("on");
-    document.getElementById("status").innerText =
-      "Status: Bulb OFF";
+    document.getElementById("status").innerText = "Status: Bulb OFF";
   }
 </script>
 
