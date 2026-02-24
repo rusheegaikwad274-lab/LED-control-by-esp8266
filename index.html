@@ -2,133 +2,126 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Smart Animated Bulb</title>
+<title>Smart Bulb Controller</title>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <style>
-  body {
-    margin: 0;
-    font-family: "Segoe UI", sans-serif;
-    background: linear-gradient(to bottom, #6a85b6, #bac8e0);
-    text-align: center;
-  }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to bottom, #74ebd5, #acb6e5);
+  text-align: center;
+}
 
-  /* ---------- LOGIN ---------- */
-  #loginScreen {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-  }
+/* ---------- LOGIN ---------- */
+#login {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
 
-  #loginScreen button {
-    padding: 12px 22px;
-    font-size: 16px;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-  }
+#login button {
+  padding: 12px 25px;
+  border-radius: 25px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
 
-  /* ---------- MAIN UI ---------- */
-  #app {
-    display: none;
-  }
+/* ---------- MAIN APP ---------- */
+#app {
+  display: none;
+}
 
-  .wall {
-    height: 50vh;
-    background: linear-gradient(to bottom, #fdfbfb, #ebedee);
-    position: relative;
-    padding-top: 20px;
-  }
+.wall {
+  height: 45vh;
+  background: #f5f5f5;
+  position: relative;
+}
 
-  .holder {
-    width: 80px;
-    height: 40px;
-    background: #333;
-    margin: auto;
-    border-radius: 0 0 12px 12px;
-  }
+.holder {
+  width: 80px;
+  height: 40px;
+  background: #333;
+  margin: 20px auto;
+  border-radius: 0 0 15px 15px;
+}
 
-  .table {
-    height: 50vh;
-    background: linear-gradient(to top, #a47148, #d2a679);
-    padding-top: 30px;
-  }
+.table {
+  height: 45vh;
+  background: linear-gradient(to top, #8d5524, #c68642);
+  padding-top: 30px;
+}
 
-  /* ---------- BULB ---------- */
-  #bulb {
-    width: 120px;
-    margin: auto;
-    position: relative;
-    top: 0;
-    transition: transform 1s ease-in-out;
-  }
+/* ---------- BULB ---------- */
+#bulb {
+  width: 120px;
+  margin: auto;
+  position: relative;
+  touch-action: none;
+  transition: transform 0.2s;
+}
 
-  .glass { fill: #666; }
-  .base { fill: #444; }
-  .filament {
-    stroke: #888;
-    stroke-width: 3;
-    fill: none;
-  }
+.glass { fill: #777; }
+.base { fill: #444; }
+.filament {
+  stroke: #888;
+  stroke-width: 3;
+  fill: none;
+}
 
-  .plugged {
-    transform: translateY(-180px);
-  }
+.on .glass {
+  fill: yellow;
+  filter: drop-shadow(0 0 30px yellow);
+}
 
-  .on .glass {
-    fill: yellow;
-    filter: drop-shadow(0 0 30px yellow);
-  }
+.on .filament {
+  stroke: orange;
+}
 
-  .on .filament {
-    stroke: orange;
-  }
+/* ---------- CONTROLLER ---------- */
+.controller {
+  background: white;
+  width: 280px;
+  margin: 10px auto;
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
 
-  /* ---------- CONTROLLER ---------- */
-  .controller {
-    background: white;
-    width: 280px;
-    margin: 15px auto;
-    padding: 15px;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-  }
+button {
+  padding: 10px 18px;
+  margin: 6px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  background: #667eea;
+  color: white;
+}
 
-  button {
-    padding: 10px 18px;
-    margin: 6px;
-    border-radius: 20px;
-    border: none;
-    cursor: pointer;
-    background: #667eea;
-    color: white;
-    font-size: 14px;
-  }
-
-  #status {
-    font-weight: bold;
-    margin-top: 10px;
-  }
+#status {
+  font-weight: bold;
+}
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN SCREEN -->
-<div id="loginScreen">
+<!-- LOGIN -->
+<div id="login">
   <h1>🔐 Smart Bulb System</h1>
-  <p>Sign in to control the bulb</p>
-  <button onclick="googleLogin()">Sign in with Google</button>
+  <p>Sign in to continue</p>
+  <button onclick="login()">Sign in with Google</button>
 </div>
 
-<!-- MAIN APP -->
+<!-- APP -->
 <div id="app">
 
   <div class="wall">
@@ -137,11 +130,10 @@
   </div>
 
   <div class="controller">
-    <h3>Controller</h3>
-    <button onclick="plugBulb()">🔌 Plug In</button><br>
+    <h3>Remote Controller</h3>
     <button onclick="turnOn()">ON</button>
     <button onclick="turnOff()">OFF</button>
-    <p id="status">Status: Waiting</p>
+    <p id="status">Status: Drag bulb to holder</p>
   </div>
 
   <div class="table">
@@ -157,51 +149,85 @@
 </div>
 
 <script>
-  /* ---------- FIREBASE CONFIG ---------- */
-  const firebaseConfig = {
-    apiKey: "AIzaSyAvI5a90RryY1GHkJkWQvEk-5RE2uTgtTE",
-    authDomain: "led-control-by-esp8266.firebaseapp.com",
-    projectId: "led-control-by-esp8266"
-  };
+/* ---------- FIREBASE ---------- */
+firebase.initializeApp({
+  apiKey: "AIzaSyAvI5a90RryY1GHkJkWQvEk-5RE2uTgtTE",
+  authDomain: "led-control-by-esp8266.firebaseapp.com",
+  projectId: "led-control-by-esp8266"
+});
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const provider = new firebase.auth.GoogleAuthProvider();
+const auth = firebase.auth();
+const provider = new firebase.auth.GoogleAuthProvider();
 
-  /* ---------- AUTH ---------- */
-  function googleLogin() {
-    auth.signInWithPopup(provider).then(() => {
-      document.getElementById("loginScreen").style.display = "none";
-      document.getElementById("app").style.display = "block";
-    }).catch(err => alert(err.message));
-  }
+/* ---------- AUTH ---------- */
+function login() {
+  auth.signInWithPopup(provider).then(() => {
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").style.display = "block";
+  });
+}
 
-  /* ---------- LOGIC ---------- */
-  let plugged = false;
+/* ---------- BULB DRAG ---------- */
+const bulb = document.getElementById("bulb");
+let dragging = false;
+let startY = 0;
+let currentY = 0;
+let plugged = false;
 
-  function plugBulb() {
-    document.getElementById("bulb").classList.add("plugged");
+bulb.addEventListener("mousedown", startDrag);
+bulb.addEventListener("touchstart", startDrag);
+
+document.addEventListener("mousemove", drag);
+document.addEventListener("touchmove", drag);
+
+document.addEventListener("mouseup", endDrag);
+document.addEventListener("touchend", endDrag);
+
+function startDrag(e) {
+  if (plugged) return;
+  dragging = true;
+  startY = getY(e) - currentY;
+}
+
+function drag(e) {
+  if (!dragging) return;
+  currentY = getY(e) - startY;
+  if (currentY > 0) currentY = 0;
+  bulb.style.transform = `translateY(${currentY}px)`;
+}
+
+function endDrag() {
+  if (!dragging) return;
+  dragging = false;
+
+  if (currentY < -150) {
+    bulb.style.transform = "translateY(-180px)";
     plugged = true;
     document.getElementById("status").innerText = "Status: Plugged in";
+  } else {
+    bulb.style.transform = "translateY(0)";
+    currentY = 0;
   }
+}
 
-  function turnOn() {
-    if (!plugged) {
-      alert("Plug the bulb first!");
-      return;
-    }
-    document.getElementById("bulb").classList.add("on");
-    document.getElementById("status").innerText = "Status: ON";
-  }
+function getY(e) {
+  return e.touches ? e.touches[0].clientY : e.clientY;
+}
 
-  function turnOff() {
-    if (!plugged) {
-      alert("Plug the bulb first!");
-      return;
-    }
-    document.getElementById("bulb").classList.remove("on");
-    document.getElementById("status").innerText = "Status: OFF";
+/* ---------- CONTROL ---------- */
+function turnOn() {
+  if (!plugged) {
+    alert("Plug the bulb first!");
+    return;
   }
+  bulb.classList.add("on");
+  document.getElementById("status").innerText = "Status: ON";
+}
+
+function turnOff() {
+  bulb.classList.remove("on");
+  document.getElementById("status").innerText = "Status: OFF";
+}
 </script>
 
 </body>
