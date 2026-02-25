@@ -18,7 +18,7 @@ body {
   text-align: center;
 }
 
-/* Login Page */
+/* LOGIN */
 #loginPage {
   height: 100vh;
   display: flex;
@@ -27,7 +27,7 @@ body {
 }
 
 .login-box {
-  background: rgba(0,0,0,0.3);
+  background: rgba(0,0,0,0.35);
   padding: 30px;
   border-radius: 12px;
   width: 280px;
@@ -55,18 +55,36 @@ button {
   color: black;
 }
 
-/* Main UI */
+/* MAIN UI */
 #mainUI {
   display: none;
   padding: 20px;
 }
 
-#bulbArea {
-  margin-top: 30px;
+#topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.bulb {
-  font-size: 80px;
+#bulb {
+  font-size: 90px;
+  margin: 30px;
+  transition: 0.3s;
+}
+
+/* BULB STATES */
+.off {
+  color: white;
+  text-shadow: none;
+}
+
+.on {
+  color: yellow;
+  text-shadow:
+    0 0 10px yellow,
+    0 0 25px orange,
+    0 0 40px gold;
 }
 
 #controller {
@@ -95,13 +113,14 @@ button {
 
 <!-- MAIN UI -->
 <div id="mainUI">
-  <h1>💡 Smart Bulb</h1>
-
-  <div id="bulbArea">
-    <div id="bulb" class="bulb">💡</div>
-    <br>
-    <button onclick="plugIn()">🔌 Plug In</button>
+  <div id="topBar">
+    <h2>💡 Smart Bulb</h2>
+    <button onclick="logout()">Logout</button>
   </div>
+
+  <div id="bulb" class="off">💡</div>
+
+  <button onclick="plugIn()">🔌 Plug In</button>
 
   <div id="controller">
     <h3>Controller</h3>
@@ -117,53 +136,57 @@ button {
 
 <script>
 /* FIREBASE CONFIG */
-var firebaseConfig = {
+firebase.initializeApp({
   apiKey: "AIzaSyAvI5a90RryY1GHkJkWQvEk-5RE2uTgtTE",
   authDomain: "led-control-by-esp8266.firebaseapp.com",
   databaseURL: "https://led-control-by-esp8266-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "led-control-by-esp8266"
-};
-firebase.initializeApp(firebaseConfig);
+});
 
-/* AUTH STATE LISTENER (MOST IMPORTANT) */
+/* AUTH STATE */
 firebase.auth().onAuthStateChanged(user => {
   if (user) {
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainUI").style.display = "block";
+    loginPage.style.display = "none";
+    mainUI.style.display = "block";
   } else {
-    document.getElementById("loginPage").style.display = "flex";
-    document.getElementById("mainUI").style.display = "none";
+    loginPage.style.display = "flex";
+    mainUI.style.display = "none";
   }
 });
 
-/* LOGIN FUNCTIONS */
+/* LOGIN */
 function emailLogin() {
-  const email = email.value;
-  const password = password.value;
-  firebase.auth().signInWithEmailAndPassword(email, password)
-    .catch(err => alert(err.message));
+  firebase.auth().signInWithEmailAndPassword(
+    email.value,
+    password.value
+  ).catch(e => alert(e.message));
 }
 
 function googleLogin() {
   const provider = new firebase.auth.GoogleAuthProvider();
   firebase.auth().signInWithPopup(provider)
-    .catch(err => alert(err.message));
+    .catch(e => alert(e.message));
 }
 
-/* UI LOGIC */
+/* LOGOUT */
+function logout() {
+  firebase.auth().signOut();
+}
+
+/* UI */
 function plugIn() {
-  document.getElementById("controller").style.display = "block";
+  controller.style.display = "block";
 }
 
-/* LED CONTROL */
+/* LED FUNCTIONS */
 function ledOn() {
   firebase.database().ref("led").set("ON");
-  document.getElementById("bulb").style.color = "yellow";
+  bulb.className = "on";
 }
 
 function ledOff() {
   firebase.database().ref("led").set("OFF");
-  document.getElementById("bulb").style.color = "white";
+  bulb.className = "off";
 }
 
 function blink() {
