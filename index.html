@@ -4,254 +4,174 @@
 <meta charset="UTF-8">
 <title>Smart Bulb Controller</title>
 
-<!-- Firebase -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:linear-gradient(to bottom,#74ebd5,#acb6e5);
-  text-align:center;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg,#667eea,#764ba2);
+  color: white;
+  text-align: center;
 }
 
-/* LOGIN */
-#login{
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  background:linear-gradient(135deg,#667eea,#764ba2);
-  color:white;
+/* Login Page */
+#loginPage {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* APP */
-#app{display:none}
-
-/* WALL */
-.wall{
-  height:55vh;
-  background:#f2f2f2;
-  position:relative;
-  padding-top:20px;
+.login-box {
+  background: rgba(0,0,0,0.3);
+  padding: 30px;
+  border-radius: 12px;
+  width: 280px;
 }
 
-.holder{
-  width:100px;
-  height:45px;
-  background:#222;
-  margin:auto;
-  border-radius:0 0 20px 20px;
+input {
+  width: 90%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 6px;
+  border: none;
 }
 
-/* BULB */
-#bulb{width:140px;margin:10px auto}
-.glass{fill:#777}
-.base{fill:#444}
-.filament{stroke:#888;stroke-width:3}
-
-.on .glass{
-  fill:#ffeb3b;
-  filter:drop-shadow(0 0 35px #ffeb3b);
-}
-.on .filament{stroke:orange}
-
-/* WALL SWITCH */
-.switch-box{
-  position:absolute;
-  right:25px;
-  top:120px;
-  width:70px;
-  height:120px;
-  background:#ddd;
-  border-radius:10px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-.switch{
-  width:30px;
-  height:60px;
-  background:#444;
-  border-radius:5px;
-  cursor:pointer;
-  transition:0.3s;
-}
-.switch.on{
-  transform:translateY(20px);
-  background:green;
+button {
+  padding: 10px 15px;
+  margin: 6px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
-/* CONTROLLER */
-.controller{
-  display:none;
-  background:white;
-  width:300px;
-  margin:15px auto;
-  padding:15px;
-  border-radius:15px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.3);
-  animation:pop 0.4s ease;
-}
-@keyframes pop{
-  from{transform:scale(0.7);opacity:0}
-  to{transform:scale(1);opacity:1}
+.google {
+  background: white;
+  color: black;
 }
 
-button{
-  padding:10px 16px;
-  margin:6px;
-  border:none;
-  border-radius:20px;
-  background:#667eea;
-  color:white;
-  cursor:pointer;
+/* Main UI */
+#mainUI {
+  display: none;
+  padding: 20px;
 }
 
-input[type=range]{width:100%}
+#bulbArea {
+  margin-top: 30px;
+}
 
-#status{font-weight:bold}
+.bulb {
+  font-size: 80px;
+}
 
-/* TABLE */
-.table{
-  height:35vh;
-  background:linear-gradient(to top,#8d5524,#c68642);
+#controller {
+  display: none;
+  margin-top: 20px;
+  background: rgba(0,0,0,0.25);
+  padding: 15px;
+  border-radius: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="login">
-  <h1>🔐 Smart Bulb System</h1>
-  <button onclick="login()">Sign in with Google</button>
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+  <div class="login-box">
+    <h2>🔐 Sign In</h2>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="emailLogin()">Login</button>
+    <br>
+    <button class="google" onclick="googleLogin()">Sign in with Google</button>
+  </div>
 </div>
 
-<!-- APP -->
-<div id="app">
+<!-- MAIN UI -->
+<div id="mainUI">
+  <h1>💡 Smart Bulb</h1>
 
-  <div class="wall">
-    <h3>Wall</h3>
-    <div class="holder"></div>
-
-    <svg id="bulb" viewBox="0 0 120 200">
-      <ellipse cx="60" cy="70" rx="45" ry="55" class="glass"/>
-      <path d="M45 80 Q60 95 75 80" class="filament"/>
-      <rect x="45" y="125" width="30" height="25" class="base"/>
-      <rect x="42" y="150" width="36" height="20" class="base"/>
-    </svg>
-
-    <!-- WALL SWITCH -->
-    <div class="switch-box">
-      <div id="wallSwitch" class="switch" onclick="togglePlug()"></div>
-    </div>
+  <div id="bulbArea">
+    <div id="bulb" class="bulb">💡</div>
+    <br>
+    <button onclick="plugIn()">🔌 Plug In</button>
   </div>
 
-  <!-- CONTROLLER -->
-  <div class="controller" id="controller">
+  <div id="controller">
     <h3>Controller</h3>
-    <button onclick="turnOn()">ON</button>
-    <button onclick="turnOff()">OFF</button>
+    <button onclick="ledOn()">ON</button>
+    <button onclick="ledOff()">OFF</button>
     <button onclick="blink()">BLINK</button>
-
-    <p>Brightness</p>
-    <input type="range" min="0" max="255" value="255" oninput="setBrightness(this.value)">
-
-    <p>Auto OFF (minutes)</p>
-    <input type="number" id="timer" min="1" placeholder="e.g. 5">
-    <button onclick="setTimer()">Set Timer</button>
-
-    <p id="status">Status: Power disconnected</p>
+    <br><br>
+    Brightness
+    <br>
+    <input type="range" min="0" max="255" onchange="setBrightness(this.value)">
   </div>
-
-  <div class="table"></div>
 </div>
 
 <script>
-/* FIREBASE */
-firebase.initializeApp({
-  apiKey:"AIzaSyAvI5a90RryY1GHkJkWQvEk-5RE2uTgtTE",
-  authDomain:"led-control-by-esp8266.firebaseapp.com",
-  projectId:"led-control-by-esp8266"
-});
+/* FIREBASE CONFIG */
+var firebaseConfig = {
+  apiKey: "AIzaSyAvI5a90RryY1GHkJkWQvEk-5RE2uTgtTE",
+  authDomain: "led-control-by-esp8266.firebaseapp.com",
+  databaseURL: "https://led-control-by-esp8266-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "led-control-by-esp8266"
+};
+firebase.initializeApp(firebaseConfig);
 
-const auth=firebase.auth();
-const provider=new firebase.auth.GoogleAuthProvider();
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
-auth.onAuthStateChanged(user=>{
-  login.style.display=user?"none":"flex";
-  app.style.display=user?"block":"none";
-});
-
-/* LOGIN */
-function login(){
-  auth.signInWithPopup(provider);
-}
-
-/* LOGIC */
-let power=false;
-let blinkInterval=null;
-let autoTimer=null;
-
-const bulb=document.getElementById("bulb");
-const wallSwitch=document.getElementById("wallSwitch");
-const controller=document.getElementById("controller");
-const status=document.getElementById("status");
-
-function togglePlug(){
-  power=!power;
-  wallSwitch.classList.toggle("on");
-
-  if(power){
-    controller.style.display="block";
-    status.innerText="Status: Power connected";
-  }else{
-    controller.style.display="none";
-    bulb.classList.remove("on");
-    clearInterval(blinkInterval);
-    clearTimeout(autoTimer);
-    status.innerText="Status: Power disconnected";
+/* AUTH STATE LISTENER (MOST IMPORTANT) */
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainUI").style.display = "block";
+  } else {
+    document.getElementById("loginPage").style.display = "flex";
+    document.getElementById("mainUI").style.display = "none";
   }
+});
+
+/* LOGIN FUNCTIONS */
+function emailLogin() {
+  const email = email.value;
+  const password = password.value;
+  firebase.auth().signInWithEmailAndPassword(email, password)
+    .catch(err => alert(err.message));
 }
 
-function turnOn(){
-  if(!power) return;
-  clearInterval(blinkInterval);
-  bulb.classList.add("on");
-  status.innerText="Status: ON";
+function googleLogin() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider)
+    .catch(err => alert(err.message));
 }
 
-function turnOff(){
-  clearInterval(blinkInterval);
-  bulb.classList.remove("on");
-  status.innerText="Status: OFF";
+/* UI LOGIC */
+function plugIn() {
+  document.getElementById("controller").style.display = "block";
 }
 
-function blink(){
-  if(!power) return;
-  clearInterval(blinkInterval);
-  blinkInterval=setInterval(()=>{
-    bulb.classList.toggle("on");
-  },500);
-  status.innerText="Status: BLINK";
+/* LED CONTROL */
+function ledOn() {
+  firebase.database().ref("led").set("ON");
+  document.getElementById("bulb").style.color = "yellow";
 }
 
-function setBrightness(val){
-  bulb.style.opacity=val/255;
+function ledOff() {
+  firebase.database().ref("led").set("OFF");
+  document.getElementById("bulb").style.color = "white";
 }
 
-function setTimer(){
-  const min=document.getElementById("timer").value;
-  if(!min) return;
-  clearTimeout(autoTimer);
-  autoTimer=setTimeout(()=>{
-    turnOff();
-  },min*60000);
-  status.innerText="Auto OFF set for "+min+" min";
+function blink() {
+  firebase.database().ref("led").set("BLINK");
+}
+
+function setBrightness(val) {
+  firebase.database().ref("brightness").set(val);
 }
 </script>
 
