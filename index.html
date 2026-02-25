@@ -2,156 +2,139 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Smart Bulb Wall Switch</title>
+<title>Smart Bulb Controller</title>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(to bottom, #74ebd5, #acb6e5);
-  text-align: center;
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(to bottom,#74ebd5,#acb6e5);
+  text-align:center;
 }
 
-/* ---------- LOGIN ---------- */
-#login {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
+/* LOGIN */
+#login{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  color:white;
 }
 
-#login button {
-  padding: 12px 24px;
-  border-radius: 25px;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-/* ---------- APP ---------- */
-#app {
-  display: none;
-}
+/* APP */
+#app{display:none}
 
 /* WALL */
-.wall {
-  height: 55vh;
-  background: #f2f2f2;
-  padding-top: 20px;
-  position: relative;
+.wall{
+  height:55vh;
+  background:#f2f2f2;
+  position:relative;
+  padding-top:20px;
 }
 
-/* HOLDER */
-.holder {
-  width: 100px;
-  height: 45px;
-  background: #222;
-  margin: auto;
-  border-radius: 0 0 20px 20px;
+.holder{
+  width:100px;
+  height:45px;
+  background:#222;
+  margin:auto;
+  border-radius:0 0 20px 20px;
 }
 
 /* BULB */
-#bulb {
-  width: 140px;
-  margin: 10px auto;
-}
+#bulb{width:140px;margin:10px auto}
+.glass{fill:#777}
+.base{fill:#444}
+.filament{stroke:#888;stroke-width:3}
 
-.glass { fill: #777; }
-.base { fill: #444; }
-.filament { stroke: #888; stroke-width: 3; }
-
-.on .glass {
-  fill: #ffeb3b;
-  filter: drop-shadow(0 0 35px #ffeb3b);
+.on .glass{
+  fill:#ffeb3b;
+  filter:drop-shadow(0 0 35px #ffeb3b);
 }
-
-.on .filament {
-  stroke: orange;
-}
+.on .filament{stroke:orange}
 
 /* WALL SWITCH */
-.switch-box {
-  position: absolute;
-  right: 25px;
-  top: 120px;
-  width: 70px;
-  height: 120px;
-  background: #ddd;
-  border-radius: 10px;
-  box-shadow: inset 0 0 5px #999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.switch-box{
+  position:absolute;
+  right:25px;
+  top:120px;
+  width:70px;
+  height:120px;
+  background:#ddd;
+  border-radius:10px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
-
-.switch {
-  width: 30px;
-  height: 60px;
-  background: #444;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: transform 0.3s, background 0.3s;
+.switch{
+  width:30px;
+  height:60px;
+  background:#444;
+  border-radius:5px;
+  cursor:pointer;
+  transition:0.3s;
 }
-
-.switch.on {
-  transform: translateY(20px);
-  background: green;
+.switch.on{
+  transform:translateY(20px);
+  background:green;
 }
 
 /* CONTROLLER */
-.controller {
-  background: white;
-  width: 280px;
-  margin: 15px auto;
-  padding: 15px;
-  border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+.controller{
+  display:none;
+  background:white;
+  width:300px;
+  margin:15px auto;
+  padding:15px;
+  border-radius:15px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.3);
+  animation:pop 0.4s ease;
+}
+@keyframes pop{
+  from{transform:scale(0.7);opacity:0}
+  to{transform:scale(1);opacity:1}
 }
 
-button {
-  padding: 10px 18px;
-  border-radius: 20px;
-  border: none;
-  background: #667eea;
-  color: white;
-  margin: 6px;
-  cursor: pointer;
+button{
+  padding:10px 16px;
+  margin:6px;
+  border:none;
+  border-radius:20px;
+  background:#667eea;
+  color:white;
+  cursor:pointer;
 }
 
-#status {
-  font-weight: bold;
-}
+input[type=range]{width:100%}
+
+#status{font-weight:bold}
 
 /* TABLE */
-.table {
-  height: 35vh;
-  background: linear-gradient(to top, #8d5524, #c68642);
+.table{
+  height:35vh;
+  background:linear-gradient(to top,#8d5524,#c68642);
 }
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <div id="login">
   <h1>🔐 Smart Bulb System</h1>
-  <p>Sign in to control the bulb</p>
   <button onclick="login()">Sign in with Google</button>
 </div>
 
-<!-- MAIN APP -->
+<!-- APP -->
 <div id="app">
 
   <div class="wall">
     <h3>Wall</h3>
-
     <div class="holder"></div>
 
     <svg id="bulb" viewBox="0 0 120 200">
@@ -167,77 +150,108 @@ button {
     </div>
   </div>
 
-  <div class="controller">
-    <h3>Remote Controller</h3>
+  <!-- CONTROLLER -->
+  <div class="controller" id="controller">
+    <h3>Controller</h3>
     <button onclick="turnOn()">ON</button>
     <button onclick="turnOff()">OFF</button>
+    <button onclick="blink()">BLINK</button>
+
+    <p>Brightness</p>
+    <input type="range" min="0" max="255" value="255" oninput="setBrightness(this.value)">
+
+    <p>Auto OFF (minutes)</p>
+    <input type="number" id="timer" min="1" placeholder="e.g. 5">
+    <button onclick="setTimer()">Set Timer</button>
+
     <p id="status">Status: Power disconnected</p>
   </div>
 
   <div class="table"></div>
-
 </div>
 
 <script>
-/* ---------- FIREBASE CONFIG ---------- */
+/* FIREBASE */
 firebase.initializeApp({
-  apiKey: "AIzaSyAvI5a90RryY1GHkJkWQvEk-5RE2uTgtTE",
-  authDomain: "led-control-by-esp8266.firebaseapp.com",
-  projectId: "led-control-by-esp8266"
+  apiKey:"AIzaSyAvI5a90RryY1GHkJkWQvEk-5RE2uTgtTE",
+  authDomain:"led-control-by-esp8266.firebaseapp.com",
+  projectId:"led-control-by-esp8266"
 });
 
-const auth = firebase.auth();
-const provider = new firebase.auth.GoogleAuthProvider();
-
-/* 🔐 IMPORTANT: KEEP USER LOGGED IN */
+const auth=firebase.auth();
+const provider=new firebase.auth.GoogleAuthProvider();
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-/* AUTO LOGIN CHECK */
-auth.onAuthStateChanged(user => {
-  if (user) {
-    document.getElementById("login").style.display = "none";
-    document.getElementById("app").style.display = "block";
-  } else {
-    document.getElementById("login").style.display = "flex";
-    document.getElementById("app").style.display = "none";
-  }
+auth.onAuthStateChanged(user=>{
+  login.style.display=user?"none":"flex";
+  app.style.display=user?"block":"none";
 });
 
 /* LOGIN */
-function login() {
-  auth.signInWithPopup(provider).catch(err => alert(err.message));
+function login(){
+  auth.signInWithPopup(provider);
 }
 
-/* ---------- LOGIC ---------- */
-let powerConnected = false;
-const bulb = document.getElementById("bulb");
-const wallSwitch = document.getElementById("wallSwitch");
-const status = document.getElementById("status");
+/* LOGIC */
+let power=false;
+let blinkInterval=null;
+let autoTimer=null;
 
-function togglePlug() {
-  powerConnected = !powerConnected;
+const bulb=document.getElementById("bulb");
+const wallSwitch=document.getElementById("wallSwitch");
+const controller=document.getElementById("controller");
+const status=document.getElementById("status");
+
+function togglePlug(){
+  power=!power;
   wallSwitch.classList.toggle("on");
 
-  if (powerConnected) {
-    status.innerText = "Status: Power connected";
-  } else {
+  if(power){
+    controller.style.display="block";
+    status.innerText="Status: Power connected";
+  }else{
+    controller.style.display="none";
     bulb.classList.remove("on");
-    status.innerText = "Status: Power disconnected";
+    clearInterval(blinkInterval);
+    clearTimeout(autoTimer);
+    status.innerText="Status: Power disconnected";
   }
 }
 
-function turnOn() {
-  if (!powerConnected) {
-    alert("Switch ON the wall power first");
-    return;
-  }
+function turnOn(){
+  if(!power) return;
+  clearInterval(blinkInterval);
   bulb.classList.add("on");
-  status.innerText = "Status: Bulb ON";
+  status.innerText="Status: ON";
 }
 
-function turnOff() {
+function turnOff(){
+  clearInterval(blinkInterval);
   bulb.classList.remove("on");
-  status.innerText = "Status: Bulb OFF";
+  status.innerText="Status: OFF";
+}
+
+function blink(){
+  if(!power) return;
+  clearInterval(blinkInterval);
+  blinkInterval=setInterval(()=>{
+    bulb.classList.toggle("on");
+  },500);
+  status.innerText="Status: BLINK";
+}
+
+function setBrightness(val){
+  bulb.style.opacity=val/255;
+}
+
+function setTimer(){
+  const min=document.getElementById("timer").value;
+  if(!min) return;
+  clearTimeout(autoTimer);
+  autoTimer=setTimeout(()=>{
+    turnOff();
+  },min*60000);
+  status.innerText="Auto OFF set for "+min+" min";
 }
 </script>
 
