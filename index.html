@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Smart Bulb Controller</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -10,132 +11,89 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg,#667eea,#764ba2);
-  color: white;
-  text-align: center;
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+  color:white;
+  text-align:center;
+}
+.hidden{display:none;}
+
+.container{padding:20px;}
+
+.bulb{
+  width:120px;
+  height:160px;
+  margin:30px auto;
+  border-radius:50% 50% 40% 40%;
+  background:#444;
+  box-shadow:inset 0 0 20px #000;
+  transition:0.2s;
+}
+.bulb.on{
+  background:yellow;
+  box-shadow:0 0 40px yellow;
 }
 
-/* LOGIN */
-#loginPage {
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.controls{
+  margin-top:20px;
+  background:rgba(255,255,255,0.12);
+  padding:20px;
+  border-radius:15px;
 }
 
-.login-box {
-  background: rgba(0,0,0,0.35);
-  padding: 30px;
-  border-radius: 12px;
-  width: 280px;
+button{
+  padding:10px 20px;
+  margin:6px;
+  border:none;
+  border-radius:8px;
+  font-size:16px;
+  cursor:pointer;
+  background:#00c6ff;
+  color:black;
 }
+button:hover{background:#7ee8fa;}
 
-input {
-  width: 90%;
-  padding: 10px;
-  margin: 8px 0;
-  border-radius: 6px;
-  border: none;
-}
-
-button {
-  padding: 10px 15px;
-  margin: 6px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.google {
-  background: white;
-  color: black;
-}
-
-/* MAIN UI */
-#mainUI {
-  display: none;
-  padding: 20px;
-}
-
-#topBar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-#bulb {
-  font-size: 90px;
-  margin: 30px;
-  transition: 0.3s;
-}
-
-/* BULB STATES */
-.off {
-  color: white;
-  text-shadow: none;
-}
-
-.on {
-  color: yellow;
-  text-shadow:
-    0 0 10px yellow,
-    0 0 25px orange,
-    0 0 40px gold;
-}
-
-#controller {
-  display: none;
-  margin-top: 20px;
-  background: rgba(0,0,0,0.25);
-  padding: 15px;
-  border-radius: 10px;
-}
+input[type=range]{width:80%;}
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN PAGE -->
-<div id="loginPage">
-  <div class="login-box">
-    <h2>🔐 Sign In</h2>
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button onclick="emailLogin()">Login</button>
-    <br>
-    <button class="google" onclick="googleLogin()">Sign in with Google</button>
-  </div>
+<!-- LOGIN -->
+<div id="loginBox" class="container">
+  <h2>🔐 Sign In</h2>
+  <button onclick="googleLogin()">Sign in with Google</button>
+  <br><br>
+  <input id="email" placeholder="Email"><br><br>
+  <input id="password" type="password" placeholder="Password"><br><br>
+  <button onclick="emailLogin()">Login</button>
 </div>
 
 <!-- MAIN UI -->
-<div id="mainUI">
-  <div id="topBar">
-    <h2>💡 Smart Bulb</h2>
-    <button onclick="logout()">Logout</button>
-  </div>
+<div id="mainUI" class="container hidden">
+  <button onclick="logout()">Logout</button>
 
-  <div id="bulb" class="off">💡</div>
+  <h2>💡 Smart Bulb</h2>
+
+  <div id="bulb" class="bulb"></div>
 
   <button onclick="plugIn()">🔌 Plug In</button>
 
-  <div id="controller">
+  <div id="controller" class="controls hidden">
     <h3>Controller</h3>
     <button onclick="ledOn()">ON</button>
     <button onclick="ledOff()">OFF</button>
     <button onclick="blink()">BLINK</button>
     <br><br>
-    Brightness
-    <br>
-    <input type="range" min="0" max="255" onchange="setBrightness(this.value)">
+    Brightness<br>
+    <input type="range" min="0" max="255" value="255" oninput="setBrightness(this.value)">
   </div>
 </div>
 
 <script>
-/* FIREBASE CONFIG */
+/* 🔥 Firebase Config (YOUR PROJECT) */
 firebase.initializeApp({
   apiKey: "AIzaSyAvI5a90RryY1GHkJkWQvEk-5RE2uTgtTE",
   authDomain: "led-control-by-esp8266.firebaseapp.com",
@@ -143,61 +101,87 @@ firebase.initializeApp({
   projectId: "led-control-by-esp8266"
 });
 
+const auth = firebase.auth();
+const db = firebase.database();
+
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+const bulb = document.getElementById("bulb");
+const controller = document.getElementById("controller");
+const loginBox = document.getElementById("loginBox");
+const mainUI = document.getElementById("mainUI");
+
+let blinkInterval = null;
+
 /* AUTH STATE */
-firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    loginPage.style.display = "none";
-    mainUI.style.display = "block";
-  } else {
-    loginPage.style.display = "flex";
-    mainUI.style.display = "none";
+auth.onAuthStateChanged(user=>{
+  if(user){
+    loginBox.classList.add("hidden");
+    mainUI.classList.remove("hidden");
+  }else{
+    loginBox.classList.remove("hidden");
+    mainUI.classList.add("hidden");
   }
 });
 
 /* LOGIN */
-function emailLogin() {
-  firebase.auth().signInWithEmailAndPassword(
-    email.value,
-    password.value
-  ).catch(e => alert(e.message));
+function googleLogin(){
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+}
+function emailLogin(){
+  auth.signInWithEmailAndPassword(email.value,password.value)
+    .catch(e=>alert(e.message));
+}
+function logout(){
+  auth.signOut();
 }
 
-function googleLogin() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  firebase.auth().signInWithPopup(provider)
-    .catch(e => alert(e.message));
+/* UI ACTIONS */
+function plugIn(){
+  controller.classList.remove("hidden");
 }
 
-/* LOGOUT */
-function logout() {
-  firebase.auth().signOut();
+function stopBlink(){
+  if(blinkInterval!==null){
+    clearInterval(blinkInterval);
+    blinkInterval=null;
+  }
 }
 
-/* UI */
-function plugIn() {
-  controller.style.display = "block";
+function ledOn(){
+  stopBlink();
+  bulb.classList.add("on");
+  db.ref("led").set({power:1,mode:"normal",brightness:255});
 }
 
-/* LED FUNCTIONS */
-function ledOn() {
-  firebase.database().ref("led").set("ON");
-  bulb.className = "on";
+function ledOff(){
+  stopBlink();
+  bulb.classList.remove("on");
+  db.ref("led").set({power:0,mode:"normal",brightness:0});
 }
 
-function ledOff() {
-  firebase.database().ref("led").set("OFF");
-  bulb.className = "off";
+function blink(){
+  stopBlink();
+  bulb.classList.remove("on");
+
+  db.ref("led").set({power:1,mode:"blink",brightness:255});
+
+  let state=false;
+  blinkInterval=setInterval(()=>{
+    state=!state;
+    if(state){
+      bulb.classList.add("on");
+    }else{
+      bulb.classList.remove("on");
+    }
+  },500);
 }
 
-function blink() {
-  firebase.database().ref("led").set("BLINK");
-}
-
-function setBrightness(val) {
-  firebase.database().ref("brightness").set(val);
+function setBrightness(val){
+  db.ref("led/brightness").set(Number(val));
+  bulb.style.opacity = val/255;
 }
 </script>
 
 </body>
 </html>
-
